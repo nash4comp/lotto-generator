@@ -4,7 +4,7 @@
   비동기: 실제로 코딩한 순서와 다르게 동작하는 코드
 
 
- -->
+-->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -33,6 +33,119 @@
   <div id="result">Result: </div>
   <div id="bonus">Bonus: </div>
   <script>
+    // 빈 배열 45개 만들고, 이 안에 undefined를 45개 채운다. 
+    // 그리고 map을 통해서 index에 1더하기 하는 식으로 해서 1부터 45를 배열에 채운다.
+    const candidate = Array(45).fill().map((v, i) => i + 1);
+
+    // 45개의 배열을 일단 먼저 랜덤으로 섞고, 그 다음에 앞에서부터 꺼내는 방식으로 진행.
+    // 이것을 피셔 예이츠 셔플(Fisher-Yates Shuffle)이라고 한다.
+    const shuffle = [];
+    while (candidate.length > 0) {
+      const random = Math.floor(Math.random() * candidate.length);    // 무작위 인덱스 뽑기
+      const spliceArray = candidate.splice(random, 1);                // 뽑은 값은 배열에 들어있음
+      const value = spliceArray[0];                                   // 배열에 들어있는 값을 꺼내어
+      shuffle.push(value);    // shuffle 배열에 넣기
+    }
+    console.log(shuffle);
+
+    /* 
+    위의 while문을 for문으로 바꾼 것
+
+    while: 범위가 변수로 되어있어서 반복횟수를 정확히 모르겠을 경우.
+    for: 범위가 명확하여 반복횟수를 정확히 알고있을 경우.
+
+    for (let i = candidate.length;) {
+      const random = Math.floor(Math.randon() * candidate.length); // 무작위 인덱스 뽑기
+      const spliceArray = candidate.splice(random, 1); // 뽑은 값은 배열에 들어있음
+      const value = spliceArray[0]; // 배열에 들어있는 값을 꺼내어
+      shuffle.push(value); // shuffle 배열에 넣기
+    }
+
+    */
+    // 작은 숫자 순서부터 정렬하기 (오름차순)
+    const winBalls = shuffle.slice(0, 6).sort((a, b) => a - b);
+    const bonus = shuffle[6];
+    console.log(winBalls, bonus);
+
+    const $result = document.querySelector('#result');
+    const $bonus = document.querySelector('#bonus');
+    const showBall = (number, $target) => {
+      const $ball = document.createElement('div');
+      // 아래는 class로 쓰면 안된다. HTML에서는 class이지만, JS에서는 className이기 때문이다.
+      $ball.className = 'ball';
+      $ball.textContent = number;
+      $target.appendChild($ball);
+
+
+    }
+
+
+    for (let i = 0; i < 6; i++) {
+      // 중복된 부분은 빼면서 매개변수로 만들자. => Refactoring
+      setTimeout(() => {
+        showBall(winBalls[i], $result);
+      }, (i + 1) * 1000);
+    }
+
+    setTimeout(() => {
+      showBall(bonus, $bonus);
+    }, 7000);
+
+
+    /*
+    < array.slice() >
+
+    원본은 안변하고 잘라낸 배열을 리턴한다.
+    array.slice(index_begin, index_end)
+    array.slice(0, 3) 인덱스 0부터 인덱스 3까지 자르는데 끝 인덱스는 포함하지 않는다.
+    array.slice(4, -1) -1은 뒤에서부터 첫번째이므로, 뒤에서부터 두번째까지 잘라낸다.
+    array.slice(4) 인덱스 4부터 끝까지 잘라낸다.
+    array.slice(-5, -1)도 가능
+
+    < array.splice() >
+    array.splice()는 원본을 수정해 버린다.
+    array.splice(index, number) 인덱스부터 number만큼의 수량을 자른다.
+
+    <sort> 
+    정렬하는 method, 리턴값에 따라 어떻게 정렬하는지 결정된다.
+    다만 원본을 바꿔버린다.
+
+    array.sort((a, b) => {
+      return a - b;
+    });
+
+    여기서 원본을 보전하고 싶으면 slice를 사용하면 된다.
+    array === array.slice() 의 결과는 false이다. 즉, 서로가 다른 것인데, 이를 활용하면 된다.
+    slice를 중간에 껴주면 복제본이 생기므로, 원본에 영향을 주지 않는다.
+    
+    array === array.slice().sort((a, b) => { return a-b })
+    → 화살표 함수이므로 아래와 같이 변경이 가능하다.
+      array.slice().sort((a, b) => a - b);     a - b 는 오름차순, b- a 는 내림차순
+
+      이 a - b 부분을 compareFunction이라고 한다.
+      이 sort는 문자열도 정렬이 가능하다.
+
+      MDN: https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference
+
+      예시) arr = ['apple', 'orange', 'grape', 'banana', 'kiwi']
+
+      arr.slice().sort((a, b) => a[0].charcodeAt() - b[0].charCodeAt())  // 오름차순으로 정렬
+      결과: arr = ["apple", "banana", "grape", "kiwi", "orange"]
+
+      arr.slice().sort((a, b) => a.localeCompare(b)) // 사전 순서대로 오름차순 정렬
+      arr.slice().sort((a, b) => b.localeCompare(a)) // 사전 순서대로 내림차순 정렬
+
+      이 알고리즘을 이해하기 위해서는 아래의 코드를 찍어보면 된다.
+
+      array.slice().sort((s, b) => {
+        console.log(a, b, a - b);
+        return a - b;
+      })
+
+      날짜 정렬도 가능하다.
+      [new Date(2020, 0, 1), new Date(2021, 0, 1)].sort((a, b) => a - b)
+
+    */
 
   </script>
 </body>
